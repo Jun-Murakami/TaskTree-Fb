@@ -1,37 +1,39 @@
-import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { findMaxId, isDescendantOfTrash, isValidAppState } from './Tree/utilities';
-import { SortableTree } from './Tree/SortableTree';
-import type { TreeItem } from './Tree/types';
-import { styled } from '@mui/material/styles';
-import { FormControlLabel, Switch, Button, Box, Typography, Grid, IconButton } from '@mui/material';
+import { findMaxId, isDescendantOfTrash, isValidAppState } from './conponents/Tree/utilities';
+import { SortableTree } from './conponents/Tree/SortableTree';
+import type { TreeItem } from './conponents/Tree/types';
+import SettingsMenu from './conponents/SettingsMenu';
+import { FormControlLabel, Switch, Button, Box, Typography, Grid } from '@mui/material';
 
 import AddIcon from '@mui/icons-material/Add';
-import UploadIcon from '@mui/icons-material/Upload';
-import DownloadIcon from '@mui/icons-material/Download';
 import './App.css';
 
 interface AppProps {
   items: TreeItem[];
   setItems: Dispatch<SetStateAction<TreeItem[]>>;
-  hideDoneItems: boolean; // この行を追加
-  setHideDoneItems: Dispatch<SetStateAction<boolean>>; // この行を追加
+  hideDoneItems: boolean;
+  setHideDoneItems: Dispatch<SetStateAction<boolean>>;
   darkMode: boolean;
   setDarkMode: Dispatch<SetStateAction<boolean>>;
+  handleLogout: () => void;
 }
 
-function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDarkMode }: AppProps) {
+function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDarkMode, handleLogout }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // 選択したアイテムのIDをセットする
   const handleSelect = (id: UniqueIdentifier) => {
     setLastSelectedItemId(id);
   };
 
+  // 完了したアイテムを非表示にする
   const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHideDoneItems(event.target.checked);
   };
 
+  // ネストされたアイテムにアイテムを追加する
   const addItemToNestedChildren = (items: TreeItem[], parentId: UniqueIdentifier, newItem: TreeItem): TreeItem[] => {
     return items.map((item) => {
       if (item.id === parentId) {
@@ -48,6 +50,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
     });
   };
 
+  // タスクを追加する
   const handleAddTask = () => {
     const newTaskId = findMaxId(items) + 1;
     const newTask = {
@@ -80,8 +83,9 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
     }
   };
 
+  // アプリの状態をJSONファイルとしてダウンロードする
   const handleDownloadAppState = () => {
-    const appState = { items, hideDoneItems, darkMode, lastUpdated: new Date() };
+    const appState = { items, hideDoneItems, darkMode };
     const appStateJSON = JSON.stringify(appState, null, 2); // 読みやすい形式でJSONを整形
     const blob = new Blob([appStateJSON], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -94,12 +98,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
     URL.revokeObjectURL(url);
   };
 
-  const hiddenFileInput = useRef<HTMLInputElement>(null);
-
-  const handleClick = () => {
-    hiddenFileInput.current?.click();
-  };
-
+  // ファイルを読み込んでアプリの状態を復元する
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -126,53 +125,6 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
     };
     reader.readAsText(file);
   };
-
-  const MaterialUISwitch = styled(Switch)(({ theme }) => ({
-    width: 62,
-    height: 34,
-    padding: 7,
-    '& .MuiSwitch-switchBase': {
-      margin: 1,
-      padding: 0,
-      transform: 'translateX(6px)',
-      '&.Mui-checked': {
-        color: '#fff',
-        transform: 'translateX(22px)',
-        '& .MuiSwitch-thumb:before': {
-          backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 20 20"><path fill="${encodeURIComponent(
-            '#fff'
-          )}" d="M4.2 2.5l-.7 1.8-1.8.7 1.8.7.7 1.8.6-1.8L6.7 5l-1.9-.7-.6-1.8zm15 8.3a6.7 6.7 0 11-6.6-6.6 5.8 5.8 0 006.6 6.6z"/></svg>')`,
-        },
-        '& + .MuiSwitch-track': {
-          opacity: 1,
-          backgroundColor: theme.palette.mode === 'dark' ? '#8796A5' : theme.palette.primary.light,
-        },
-      },
-    },
-    '& .MuiSwitch-thumb': {
-      backgroundColor: theme.palette.mode === 'light' ? theme.palette.background.default : theme.palette.primary.main,
-      width: 32,
-      height: 32,
-      '&::before': {
-        content: "''",
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        left: 0,
-        top: 0,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 20 20"><path fill="${encodeURIComponent(
-          theme.palette.mode === 'dark' ? theme.palette.background.default : theme.palette.primary.main
-        )}" d="M9.305 1.667V3.75h1.389V1.667h-1.39zm-4.707 1.95l-.982.982L5.09 6.072l.982-.982-1.473-1.473zm10.802 0L13.927 5.09l.982.982 1.473-1.473-.982-.982zM10 5.139a4.872 4.872 0 00-4.862 4.86A4.872 4.872 0 0010 14.862 4.872 4.872 0 0014.86 10 4.872 4.872 0 0010 5.139zm0 1.389A3.462 3.462 0 0113.471 10a3.462 3.462 0 01-3.473 3.472A3.462 3.462 0 016.527 10 3.462 3.462 0 0110 6.528zM1.665 9.305v1.39h2.083v-1.39H1.666zm14.583 0v1.39h2.084v-1.39h-2.084zM5.09 13.928L3.616 15.4l.982.982 1.473-1.473-.982-.982zm9.82 0l-.982.982 1.473 1.473.982-.982-1.473-1.473zM9.305 16.25v2.083h1.389V16.25h-1.39z"/></svg>')`,
-      },
-    },
-    '& .MuiSwitch-track': {
-      opacity: 1,
-      backgroundColor: theme.palette.mode === 'dark' ? '#8796A5' : '#aab4be',
-      borderRadius: 20 / 2,
-    },
-  }));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -201,11 +153,21 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
         />
         TaskTree
       </Typography>
-      <Grid container spacing={2} justifyContent='center' sx={{ marginTop: { xs: 0, sm: '30px' }, marginBottom: '20px' }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          width: '100%',
+          maxWidth: '100%',
+          margin: '0 auto',
+          marginTop: { xs: 0, sm: '30px' },
+          marginBottom: '20px',
+        }}
+      >
         <Grid
           item
           xs={12}
-          sm={3}
+          sm={4}
           sx={{
             display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
             position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
@@ -224,21 +186,20 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
             タスクを追加
           </Button>
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
           <FormControlLabel
             control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
             label={<Typography sx={{ fontSize: '0.9em' }}>完了を非表示</Typography>}
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <FormControlLabel control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />} label='' />
-          <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-          <IconButton onClick={handleClick}>
-            <UploadIcon />
-          </IconButton>
-          <IconButton onClick={handleDownloadAppState}>
-            <DownloadIcon />
-          </IconButton>
+        <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
+          <SettingsMenu
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            handleFileUpload={handleFileUpload}
+            handleDownloadAppState={handleDownloadAppState}
+            handleLogout={handleLogout}
+          />
         </Grid>
       </Grid>
       <SortableTree
@@ -251,21 +212,23 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
         setItems={setItems}
         onSelect={handleSelect}
       />
-      <Box
+      <Button
+        variant='contained'
+        color='primary'
+        startIcon={<AddIcon />}
+        onClick={handleAddTask}
         sx={{
           zIndex: 1000,
           display: { xs: 'flex', sm: 'none' }, // スマホサイズでのみ表示
           position: 'fixed',
+          width: '60%', // 幅を40%に設定
           bottom: 20,
-          left: 80,
-          width: '100%',
-          justifyContent: 'left',
+          left: '50%', // 左端から50%の位置に設定
+          transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
         }}
       >
-        <Button variant='contained' color='primary' startIcon={<AddIcon />} sx={{ width: '40%' }} onClick={handleAddTask}>
-          タスク追加
-        </Button>
-      </Box>
+        タスク追加
+      </Button>
     </Box>
   );
 }

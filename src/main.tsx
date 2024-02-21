@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { TreeItem } from './Tree/types';
+import { TreeItem } from './conponents/Tree/types.ts';
 import { useAppStateSync } from './hooks/useAppStateSync';
 import './index.css';
 import { theme, darkTheme } from './mui_theme';
@@ -49,6 +49,7 @@ function Main() {
     signInWithPopup(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
+        setMessage(null);
       })
       .catch((error) => {
         console.error(error);
@@ -60,6 +61,7 @@ function Main() {
     signOut(auth)
       .then(() => {
         setIsLoggedIn(false);
+        setMessage('ログアウトしました。');
       })
       .catch((error) => {
         console.error(error);
@@ -92,21 +94,9 @@ function Main() {
             setHideDoneItems={setHideDoneItems}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
+            handleLogout={handleLogout}
           />
           {isLoading && <CircularProgress sx={{ marginTop: 2 }} />}
-          <Button
-            onClick={handleLogout}
-            variant='outlined'
-            sx={{
-              zIndex: 1000,
-              position: 'fixed',
-              bottom: 20,
-              right: 30,
-              backgroundColor: theme.palette.background.default,
-            }}
-          >
-            Logout
-          </Button>
         </>
       ) : (
         <>

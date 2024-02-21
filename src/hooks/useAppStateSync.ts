@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
-import { TreeItem, AppState } from '../Tree/types'; // 必要な型をインポート
-import { initialItems } from '../Tree/mock'; // 初期状態をインポート
-import { isValidAppState } from '../Tree/utilities'; // 状態の検証関数をインポート
+import { TreeItem, AppState } from '../conponents/Tree/types'; // 必要な型をインポート
+import { initialItems } from '../conponents/Tree/mock'; // 初期状態をインポート
+import { isValidAppState } from '../conponents/Tree/utilities'; // 状態の検証関数をインポート
 import { getAuth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 
@@ -57,7 +57,7 @@ export const useAppStateSync = (
         if (!user) {
           throw new Error('ユーザーがログインしていません。');
         }
-
+        setIsLoading(true);
         const db = getDatabase();
         const appStateRef = ref(db, `users/${user.uid}/appState`);
 
@@ -76,18 +76,22 @@ export const useAppStateSync = (
             setHideDoneItems(data.hideDoneItems);
             setDarkMode(data.darkMode);
             setIsLoadedFromExternal(true);
+            if (setIsLoading) setIsLoading(false);
           } else {
             // データが存在しない場合にのみinitialItemsを使用
             setItems(initialItems);
+            if (setIsLoading) setIsLoading(false);
           }
         }, (error) => {
           // エラーハンドリングをここに追加
+          if (setIsLoading) setIsLoading(false);
           handleError(error);
         });
 
         // クリーンアップ関数
         return () => unsubscribe();
       } catch (error) {
+        if (setIsLoading) setIsLoading(false);
         handleError(error);
       }
     }
