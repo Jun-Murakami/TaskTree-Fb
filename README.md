@@ -4,7 +4,7 @@
 https://tasktree-fb.web.app/
 
 このバージョンでは、ユーザーデータは Google の Firebase サーバに保存されます。  
-データをユーザーアカウントの Google Drive に保存する旧バージョンはこちら
+データをユーザーアカウントの Google Drive に保存する旧バージョンはこちら  
 https://github.com/Jun-Murakami/TaskTree
 
 <img width="809" alt="スクリーンショット 2024-02-18 23 00 29" src="https://github.com/Jun-Murakami/TaskTree/assets/126404131/f4c15585-3fe0-4e1d-b0c5-d9899d7b263f">
