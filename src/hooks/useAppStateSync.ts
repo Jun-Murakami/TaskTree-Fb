@@ -3,8 +3,7 @@ import { TreeItem, AppState } from '../Tree/types'; // 必要な型をインポ�
 import { initialItems } from '../Tree/mock'; // 初期状態をインポート
 import { isValidAppState } from '../Tree/utilities'; // 状態の検証関数をインポート
 import { getAuth, signOut } from 'firebase/auth';
-import { getStorage, ref, uploadBytes, getDownloadURL, getMetadata } from 'firebase/storage';
-
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 
 export const useAppStateSync = (
   items: TreeItem[],
@@ -17,155 +16,111 @@ export const useAppStateSync = (
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setMessage: React.Dispatch<React.SetStateAction<string | null>>,
-  lastUpdated: Date | null,
-  setLastUpdated: React.Dispatch<React.SetStateAction<Date>>
 ) => {
-  // ポーリングによって状態が更新されたかどうかを示すフラグ
   const [isLoadedFromExternal, setIsLoadedFromExternal] = useState(false);
 
-  // 状態の読み込み
+  // エラーハンドリング
+  const handleError = useCallback((error: unknown) => {
+    if (error instanceof Error) {
+      setMessage('ログアウトしました。 : ' + error.message);
+    } else {
+      setMessage('ログアウトしました。不明なエラーが発生しました。');
+    }
+    setItems([]);
+    signOut(getAuth());
+    setIsLoggedIn(false);
+    if (setIsLoading) setIsLoading(false);
+  }, [setMessage, setItems, setIsLoggedIn, setIsLoading]);
+
+  // itemsがTreeItem[]型であることを確認
+  function isTreeItemArray(items: unknown): items is TreeItem[] {
+    return Array.isArray(items) && items.every(item =>
+      typeof item.id !== 'undefined' &&
+      Array.isArray(item.children) &&
+      typeof item.value === 'string'
+    );
+  }
+
+  // 保存時に削除されたitemsのchildrenプロパティを復元
+  function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
+    return items.map(item => ({
+      ...item,
+      children: item.children ? ensureChildrenProperty(item.children) : []
+    }));
+  }
+
+  // 状態の読み込みと監視
   useEffect(() => {
     if (isLoggedIn) {
-      const fetchAndSetAppState = async () => {
-        try {
-          const user = getAuth().currentUser;
-          if (!user) {
-            throw new Error('ユーザーがログインしていません。');
-          }
-
-          const storage = getStorage();
-          const storageRef = ref(storage, `${user.uid}/TaskTree.json`);
-
-          // メタデータの取得
-          getMetadata(storageRef)
-            .then((metadata) => {
-              const fileUpdated = new Date(metadata.updated);
-              // lastUpdatedと比較
-              if (!lastUpdated || (fileUpdated.getTime() - lastUpdated.getTime()) > 3000) {
-                // 更新がある場合のみダウンロードを進める
-                if (setIsLoading) setIsLoading(true);
-                getDownloadURL(storageRef)
-                  .then((url) => {
-                    fetch(url)
-                      .then((response) => response.json())
-                      .then((appState: AppState) => {
-                        if (isValidAppState(appState)) {
-                          setItems(appState.items);
-                          setHideDoneItems(appState.hideDoneItems);
-                          setDarkMode(appState.darkMode);
-                          setLastUpdated(fileUpdated);
-                          setIsLoadedFromExternal(true);
-                        }
-                        if (setIsLoading) setIsLoading(false);
-                      })
-                      .catch((error) => {
-                        // JSONのフェッチまたは解析に失敗した場合のエラーハンドリング
-                        throw new Error('データの読み込みに失敗しました。' + error);
-                      });
-                  })
-                  .catch((error) => {
-                    // ファイルが存在しない場合の処理
-                    console.error(error);
-                    setItems(initialItems);
-                    if (setIsLoading) setIsLoading(false);
-                  });
-              } else {
-                // 更新がない場合は何もしない
-                if (setIsLoading) setIsLoading(false);
-              }
-            })
-            .catch(() => {
-              // ファイルが存在しない場合の処理
-              setItems(initialItems);
-              if (setIsLoading) setIsLoading(false);
-            });
-        } catch (error) {
-          handleError(error);
-        }
-      };
-
-      fetchAndSetAppState();
-
-      // ポーリングを開始
-      const interval = setInterval(fetchAndSetAppState, 10000);
-      return () => clearInterval(interval);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, setDarkMode, setHideDoneItems, setIsLoading, setItems, lastUpdated, setLastUpdated]);
-
-
-
-  // 状態の保存
-  // Firebase Storageに状態を保存する
-  const saveOrUpdateAppStateToFirebaseStorage = useCallback((appStateJSON: string) => {
-    return new Promise((resolve, reject) => {
-      (async () => {
-        const appState = JSON.parse(appStateJSON);
-        if (!isValidAppState(appState)) {
-          reject(new Error('保存する状態が指定された条件を満たしていません。'));
-          return;
-        }
-
+      try {
         const user = getAuth().currentUser;
         if (!user) {
-          reject(new Error('ユーザー情報が取得できません。'));
-          return;
+          throw new Error('ユーザーがログインしていません。');
         }
-        const storage = getStorage();
-        const storageRef = ref(storage, `${user.uid}/TaskTree.json`);
-        const appStateBlob = new Blob([appStateJSON], { type: 'application/json' });
 
-        uploadBytes(storageRef, appStateBlob)
-          .then((snapshot) => {
-            resolve(snapshot.metadata);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      })();
-    });
-  }, []);
+        const db = getDatabase();
+        const appStateRef = ref(db, `users/${user.uid}/appState`);
 
-  // 状態が変更されたとき（例: アイテムの追加、完了タスクの表示/非表示の切り替え、ダークモードの切り替え）にGoogle Driveに状態を保存
+        // データベースの変更をリアルタイムで監視
+        const unsubscribe = onValue(appStateRef, (snapshot) => {
+          // データが存在する場合は取得し、itemsにセット
+          if (snapshot.exists()) {
+            const data: AppState = snapshot.val();
+            const itemsWithChildren = ensureChildrenProperty(data.items);
+            // 取得したデータがTreeItem[]型であることを確認
+            if (isTreeItemArray(itemsWithChildren)) {
+              setItems(itemsWithChildren);
+            } else {
+              throw new Error('取得したデータがTreeItem[]型ではありません。');
+            }
+            setHideDoneItems(data.hideDoneItems);
+            setDarkMode(data.darkMode);
+            setIsLoadedFromExternal(true);
+          } else {
+            // データが存在しない場合にのみinitialItemsを使用
+            setItems(initialItems);
+          }
+        }, (error) => {
+          // エラーハンドリングをここに追加
+          handleError(error);
+        });
+
+        // クリーンアップ関数
+        return () => unsubscribe();
+      } catch (error) {
+        handleError(error);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
+
+  // 状態が変更されたとき（例: アイテムの追加、完了タスクの表示/非表示の切り替え、ダークモードの切り替え）に保存
   useEffect(() => {
     const debounceSave = setTimeout(() => {
       const user = getAuth().currentUser;
       if (!user) {
         return;
       }
-      if (user && !isLoadedFromExternal) {
-        const appState = { items, hideDoneItems, darkMode };
-        const appStateJSON = JSON.stringify(appState);
-        saveOrUpdateAppStateToFirebaseStorage(appStateJSON)
-          .then(() => {
-            setLastUpdated(new Date());
-          })
-          .catch((error: unknown) => {
-            handleError(error);
-          });
-      } else if (user) {
+      if (isLoadedFromExternal) {
         setIsLoadedFromExternal(false);
+        return;
+      }
+      try {
+        const appState = { items, hideDoneItems, darkMode };
+        if (!isValidAppState(appState)) {
+          throw new Error('保存する状態が指定された条件を満たしていません。');
+        }
+        const db = getDatabase();
+        const appStateRef = ref(db, `users/${user.uid}/appState`);
+        set(appStateRef, appState);
+      } catch (error) {
+        handleError(error);
       }
     }, 3000); // 3秒のデバウンス
 
-    return () => clearTimeout(debounceSave); // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, hideDoneItems, darkMode, saveOrUpdateAppStateToFirebaseStorage, isLoadedFromExternal, setIsLoggedIn]);
-
-  function handleError(error: unknown) {
-    if (error instanceof Error) {
-      setMessage('ログアウトしました。 : ' + error.message);
-    } else {
-      setMessage('ログアウトしました。不明なエラーが発生しました。');
-    }
-    setLastUpdated(new Date(0));
-    setItems([]);
-    signOut(getAuth());
-    setIsLoggedIn(false);
-    if (setIsLoading) setIsLoading(false);
-  }
+    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
+    return () => clearTimeout(debounceSave);
+  }, [items, hideDoneItems, darkMode, isLoadedFromExternal, handleError]);
 };
-
-
 
 export default useAppStateSync;

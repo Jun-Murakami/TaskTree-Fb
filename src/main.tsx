@@ -8,6 +8,7 @@ import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper } from '@mui/material';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -18,9 +19,11 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_MESSAGE_SENDER_ID,
   appId: import.meta.env.VITE_APP_ID,
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
+  databaseURL: 'https://tasktree-fb-default-rtdb.asia-southeast1.firebasedatabase.app',
 };
 
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+getDatabase(app);
 
 function Main() {
   const [darkMode, setDarkMode] = useState(false);
@@ -29,7 +32,6 @@ function Main() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState(new Date(0));
 
   useEffect(() => {
     const auth = getAuth();
@@ -75,9 +77,7 @@ function Main() {
     isLoggedIn,
     setIsLoggedIn,
     setIsLoading,
-    setMessage,
-    lastUpdated,
-    setLastUpdated
+    setMessage
   );
 
   return (
