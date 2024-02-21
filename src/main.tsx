@@ -136,7 +136,7 @@ function Main() {
             </Typography>
           </Paper>
           <Typography variant='caption'>
-            <a href='https://github.com/Jun-Murakami/TaskTree'>©{new Date().getFullYear()} Jun Murakami</a>
+            <a href='https://github.com/Jun-Murakami/TaskTree-Fb'>©{new Date().getFullYear()} Jun Murakami</a>
           </Typography>
         </>
       )}
