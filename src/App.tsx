@@ -77,7 +77,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
       }
       setItems(newItems); // 更新されたアイテムの配列をセット
     } else {
-      // 以前のロジックを使用して、選択したアイテムの直下に新しいアイテムを追加
+      // 選択したアイテムの直下に新しいアイテムを追加
       const updatedItems = addItemToNestedChildren(items, lastSelectedItemId, newTask);
       setItems(updatedItems);
     }
