@@ -7,6 +7,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import LogoutIcon from '@mui/icons-material/Logout';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 interface SettingsMenuProps {
   darkMode: boolean;
@@ -14,6 +15,7 @@ interface SettingsMenuProps {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadAppState: () => void;
   handleLogout: () => void;
+  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function SettingsMenu({
@@ -22,6 +24,7 @@ export default function SettingsMenu({
   handleFileUpload,
   handleDownloadAppState,
   handleLogout,
+  setIsWaitingForDelete,
 }: SettingsMenuProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -103,7 +106,7 @@ export default function SettingsMenu({
             aria-expanded={open ? 'true' : undefined}
             startIcon={<SettingsIcon sx={{ width: 32, height: 32 }} />}
           >
-            <Typography sx={{ fontSize: '0.9rem' }}>Settings</Typography>
+            <Typography sx={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Settings</Typography>
           </Button>
         </Tooltip>
       </Box>
@@ -159,7 +162,6 @@ export default function SettingsMenu({
         <MenuItem
           onClick={() => {
             handleUploadClick();
-            handleClose();
           }}
         >
           <ListItemIcon>
@@ -177,6 +179,18 @@ export default function SettingsMenu({
             <DownloadIcon fontSize='small' />
           </ListItemIcon>
           Backup
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            setIsWaitingForDelete(true);
+            handleClose();
+          }}
+        >
+          <ListItemIcon>
+            <DeleteForeverIcon fontSize='small' />
+          </ListItemIcon>
+          Delete Account
         </MenuItem>
       </Menu>
     </>

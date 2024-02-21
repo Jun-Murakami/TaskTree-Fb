@@ -13,6 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 4rem;
+  padding: 1rem;
+  text-align: center;
+}
+
 ::selection {
   color: #ffffff; /* 選択されたテキストの文字色 */
   background: #2e748d; /* 選択されたテキストの背景色 */

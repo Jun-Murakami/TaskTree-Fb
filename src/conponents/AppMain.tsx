@@ -1,13 +1,12 @@
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { findMaxId, isDescendantOfTrash, isValidAppState } from './conponents/Tree/utilities';
-import { SortableTree } from './conponents/Tree/SortableTree';
-import type { TreeItem } from './conponents/Tree/types';
-import SettingsMenu from './conponents/SettingsMenu';
+import { findMaxId, isDescendantOfTrash, isValidAppState } from '../conponents/Tree/utilities';
+import { SortableTree } from '../conponents/Tree/SortableTree';
+import type { TreeItem } from '../conponents/Tree/types';
+import SettingsMenu from '../conponents/SettingsMenu';
 import { FormControlLabel, Switch, Button, Box, Typography, Grid } from '@mui/material';
 
 import AddIcon from '@mui/icons-material/Add';
-import './App.css';
 
 interface AppProps {
   items: TreeItem[];
@@ -17,9 +16,19 @@ interface AppProps {
   darkMode: boolean;
   setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleLogout: () => void;
+  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
 }
 
-function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDarkMode, handleLogout }: AppProps) {
+function AppMain({
+  items,
+  setItems,
+  hideDoneItems,
+  setHideDoneItems,
+  darkMode,
+  setDarkMode,
+  handleLogout,
+  setIsWaitingForDelete,
+}: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -102,6 +111,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
+      console.error('ファイルが選択されていません。');
       return;
     }
 
@@ -157,7 +167,8 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
         container
         spacing={2}
         sx={{
-          width: '100%',
+          width: '80%',
+          minWidth: '350px',
           maxWidth: '100%',
           margin: '0 auto',
           marginTop: { xs: 0, sm: '30px' },
@@ -180,7 +191,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
             variant='contained'
             color='primary'
             startIcon={<AddIcon />}
-            sx={{ width: '100%', maxWidth: '400px' }}
+            sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
             onClick={handleAddTask}
           >
             タスクを追加
@@ -189,7 +200,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
         <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
           <FormControlLabel
             control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-            label={<Typography sx={{ fontSize: '0.9em' }}>完了を非表示</Typography>}
+            label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
           />
         </Grid>
         <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
@@ -199,6 +210,7 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
             handleFileUpload={handleFileUpload}
             handleDownloadAppState={handleDownloadAppState}
             handleLogout={handleLogout}
+            setIsWaitingForDelete={setIsWaitingForDelete}
           />
         </Grid>
       </Grid>
@@ -233,4 +245,4 @@ function App({ items, setItems, hideDoneItems, setHideDoneItems, darkMode, setDa
   );
 }
 
-export default App;
+export default AppMain;
