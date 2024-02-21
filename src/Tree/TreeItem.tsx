@@ -68,6 +68,14 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       return () => clearTimeout(timer);
     }, []);
 
+    // ボタンの共通スタイルを定義
+    const buttonStyle = {
+      width: '30px',
+      minWidth: '30px',
+      height: '30px',
+      marginTop: '0px',
+    };
+
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
       p: 1,
@@ -94,18 +102,25 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
-        opacity: 0.7,
+        zIndex: 1000,
+        opacity: 0.8,
         position: 'absolute',
+        width: '250px',
         boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',
+        '& textarea': {
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+        },
       }),
       ...(ghost && {
+        zIndex: -1,
         position: 'relative',
         padding: 0,
         height: '8px',
         borderColor: theme.palette.primary.main,
         backgroundColor: theme.palette.primary.main,
         '&:before': {
-          zIndex: 1000,
+          zIndex: -1,
           position: 'absolute',
           left: '-8px',
           top: '-4px',
@@ -158,10 +173,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
               sx={{
                 color: theme.palette.grey[500],
                 cursor: 'grab',
-                width: '30px',
-                minWidth: '30px',
-                height: '30px',
-                margin: 'auto 0',
+                ...buttonStyle,
+                touchAction: 'none',
               }}
               onClick={() => id !== undefined && onSelect?.(id)}
               {...handleProps}
@@ -170,7 +183,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             </Button>
           ) : (
             <Button
-              sx={{ color: theme.palette.text.secondary, width: '30px', minWidth: '30px', height: '30px', margin: 'auto 0' }}
+              sx={{ color: theme.palette.text.secondary, ...buttonStyle }}
               onClick={() => id !== undefined && onSelect?.(id)}
             >
               <DeleteIcon />
@@ -178,21 +191,27 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           )}
           {onCollapse && (
             <Button
-              sx={{ color: theme.palette.text.secondary, width: '30px', minWidth: '30px', height: '30px', margin: 'auto 0' }}
+              sx={{
+                color: theme.palette.text.secondary,
+                ...buttonStyle,
+              }}
               onClick={() => {
                 onCollapse?.();
                 id !== undefined && onSelect?.(id);
               }}
             >
               <KeyboardArrowDownIcon
-                style={{ transition: 'transform 250ms ease', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+                sx={{
+                  transition: 'transform 250ms ease',
+                  transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                }}
               />
             </Button>
           )}
           {id !== 'trash' ? (
             <>
               <Checkbox
-                sx={{ width: '30px', minWidth: '30px', height: '30px', margin: 'auto 0' }}
+                sx={{ ...buttonStyle }}
                 checked={done}
                 onClick={() => id !== undefined && onSelect?.(id)}
                 onChange={(e) => onChangeDone?.(e.target.checked)}
@@ -221,16 +240,13 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                 }}
               />
               {!clone && onRemove && (
-                <Button
-                  sx={{ color: theme.palette.grey[500], width: '30px', minWidth: '30px', height: '30px', margin: 'auto 0' }}
-                  onClick={onRemove}
-                >
+                <Button sx={{ color: theme.palette.grey[500], ...buttonStyle }} onClick={onRemove}>
                   <CloseIcon />
                 </Button>
               )}
             </>
           ) : (
-            <Typography sx={{ py: '10px', fontSize: '0.9rem', margin: 'auto 5px' }}> ゴミ箱 </Typography>
+            <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px' }}> ゴミ箱 </Typography>
           )}
           {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
         </Stack>
