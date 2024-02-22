@@ -95,20 +95,18 @@ export default function SettingsMenu({
   return (
     <>
       <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-        <Tooltip title='Settings'>
-          <Button
-            onClick={handleClick}
-            variant='text'
-            size='small'
-            sx={{ ml: 2, color: theme.palette.text.secondary, margin: '0 auto' }}
-            aria-controls={open ? 'account-menu' : undefined}
-            aria-haspopup='true'
-            aria-expanded={open ? 'true' : undefined}
-            startIcon={<SettingsIcon sx={{ width: 32, height: 32 }} />}
-          >
-            <Typography sx={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Settings</Typography>
-          </Button>
-        </Tooltip>
+        <Button
+          onClick={handleClick}
+          variant='text'
+          size='small'
+          sx={{ ml: 2, color: theme.palette.text.secondary, margin: '0 auto' }}
+          aria-controls={open ? 'account-menu' : undefined}
+          aria-haspopup='true'
+          aria-expanded={open ? 'true' : undefined}
+          startIcon={<SettingsIcon sx={{ width: 32, height: 32 }} />}
+        >
+          <Typography sx={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Settings</Typography>
+        </Button>
       </Box>
       <Menu
         anchorEl={anchorEl}
@@ -144,54 +142,64 @@ export default function SettingsMenu({
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <LogoutIcon fontSize='small' />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
+        <Tooltip title='アプリからログアウト' placement='right'>
+          <MenuItem onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon fontSize='small' />
+            </ListItemIcon>
+            Logout
+          </MenuItem>
+        </Tooltip>
         <Divider />
-        <MenuItem>
-          <FormControlLabel
-            control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />}
-            label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
-          />
-        </MenuItem>
+        <Tooltip title='表示モードの切り替え' placement='right'>
+          <MenuItem>
+            <FormControlLabel
+              control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />}
+              label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
+            />
+          </MenuItem>
+        </Tooltip>
         <Divider />
         <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-        <MenuItem
-          onClick={() => {
-            handleUploadClick();
-          }}
-        >
-          <ListItemIcon>
-            <UploadIcon fontSize='small' />
-          </ListItemIcon>
-          Upload
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleDownloadAppState();
-            handleClose();
-          }}
-        >
-          <ListItemIcon>
-            <DownloadIcon fontSize='small' />
-          </ListItemIcon>
-          Backup
-        </MenuItem>
+        <Tooltip title='バックアップをアプリに復元' placement='right'>
+          <MenuItem
+            onClick={() => {
+              handleUploadClick();
+            }}
+          >
+            <ListItemIcon>
+              <UploadIcon fontSize='small' />
+            </ListItemIcon>
+            Upload
+          </MenuItem>
+        </Tooltip>
+        <Tooltip title='アプリのデータをバックアップ' placement='right'>
+          <MenuItem
+            onClick={() => {
+              handleDownloadAppState();
+              handleClose();
+            }}
+          >
+            <ListItemIcon>
+              <DownloadIcon fontSize='small' />
+            </ListItemIcon>
+            Backup
+          </MenuItem>
+        </Tooltip>
         <Divider />
-        <MenuItem
-          onClick={() => {
-            setIsWaitingForDelete(true);
-            handleClose();
-          }}
-        >
-          <ListItemIcon>
-            <DeleteForeverIcon fontSize='small' />
-          </ListItemIcon>
-          Delete Account
-        </MenuItem>
+        <Tooltip title='ユーザーアカウントの削除' placement='right'>
+          <MenuItem
+            onClick={() => {
+              setIsWaitingForDelete(true);
+              handleClose();
+            }}
+          >
+            <ListItemIcon>
+              <DeleteForeverIcon fontSize='small' />
+            </ListItemIcon>
+            Delete Account
+          </MenuItem>
+        </Tooltip>
       </Menu>
     </>
   );

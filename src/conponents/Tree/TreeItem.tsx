@@ -103,7 +103,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       boxSizing: 'border-box',
       ...(clone && {
         zIndex: 1000,
-        opacity: 0.8,
+        opacity: 0.9,
         position: 'absolute',
         width: '250px',
         boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',

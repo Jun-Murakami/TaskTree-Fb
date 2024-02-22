@@ -183,6 +183,8 @@ function AppMain({
             display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
             position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
             top: isScrolled ? 0 : 'auto', // スクロール時は上部に固定
+            left: isScrolled ? '50%' : 'auto', // スクロール時は左端に固定
+            transform: isScrolled ? 'translateX(-50%)' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せ
             zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
             width: isScrolled ? '100%' : 'auto', // スクロール時は幅を100%に
           }}
