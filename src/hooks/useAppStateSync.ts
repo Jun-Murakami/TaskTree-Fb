@@ -102,7 +102,7 @@ export const useAppStateSync = (
   useEffect(() => {
     const debounceSave = setTimeout(() => {
       const user = getAuth().currentUser;
-      if (!user) {
+      if (!user || !items) {
         return;
       }
       if (isLoadedFromExternal) {
