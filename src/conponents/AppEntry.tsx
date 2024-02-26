@@ -5,7 +5,7 @@ import { useAppStateSync } from '../hooks/useAppStateSync';
 import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
 
 export default function AppEntry() {
@@ -21,7 +21,6 @@ export default function AppEntry() {
   useEffect(() => {
     const auth = getAuth();
     setIsLoading(true);
-
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
       setIsLoading(false);
@@ -34,7 +33,7 @@ export default function AppEntry() {
   const handleLogin = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider)
+    signInWithPopup(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
         setMessage(null);
@@ -151,6 +150,7 @@ export default function AppEntry() {
             <img src='/TaskTree.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
             TaskTree<Typography variant='caption'>v2</Typography>
           </Typography>
+
           {isLoading ? (
             <CircularProgress
               sx={{
